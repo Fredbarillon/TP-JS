@@ -32,7 +32,7 @@ async function getWordList(length,number) {
 
 const selectRandomWord = () => {
     const i = Math.floor(Math.random() * currentWordList.length);
-    choosenWord = currentWordList[i];
+    choosenWord = currentWordList[i];    
     return choosenWord;
 }
 
@@ -49,8 +49,8 @@ const startGame = async () => {
         currentWordList.length = 0; 
         wordTyped.length = 0;
         choosenWord = null;
-        tries = 5;   
-        
+        tries = 5;
+        displayTries();
         await storeWordList();
         selectRandomWord();
         createScreen();
@@ -66,12 +66,12 @@ const detectKey = () => {
         if (tries == 0) return
 
         if (event.key.match(/^[A-Za-z]$/)) {
-            console.log(event.key + " key pressed");
+            // console.log(event.key + " key pressed");
             if (wordTyped.length < difficulty[0]) {
                 const letter = event.key.toLowerCase();
                 wordTyped.push(letter);
                 displayLetter();
-                console.log(wordTyped);
+                // console.log(wordTyped);
             }else {
                 alert("Mot trop long");
             }
@@ -83,35 +83,64 @@ const detectKey = () => {
         }
         
         if (event.key === "Backspace" && wordTyped.length > 0) {
-            console.log("Backspace key pressed");
+            // console.log("Backspace key pressed");
             wordTyped.pop();
             displayLetter();
-            console.log(wordTyped);
+            // console.log(wordTyped);
         }
     });
 }
 
 // check if the word is correct
 const checkWord = () => {
+    const btn = document.querySelector("#start");
     if (wordTyped.length === difficulty[0]) {
+        // console.log("word typed:", wordString);
+        checkLetters(wordTyped);
         const wordString = wordTyped.toString().replace(/,/g, "");
-        console.log("word typed:", wordString);
 
         if (wordString === choosenWord) {
             alert(" gg! le mot est: "+ choosenWord);
+            btn.textContent = "Recommencer";
+            return
         } else {
             tries--; 
-            console.log(" non! essais restants :", tries);
+            alert("Mot incorrect, essaye encore !");
+            displayTries();
+            // console.log(" non! essais restants :", tries);
             if (tries === 0) {
                 alert(" game over. le mot est :" + choosenWord);
+                btn.textContent = "Recommencer";
             }
         }
 
         wordTyped.length = 0; 
     } else {
-        console.log(" Mot incomplet");
+        alert(" Mot incomplet");
     }
 }
+
+const checkLetters = () => {
+    const wordArray = choosenWord.split("");
+    const rows = screen.querySelectorAll(".row");
+    const targetRow = rows[difficulty[0] - tries]; 
+    const boxes = targetRow.querySelectorAll(".letterBox");
+
+    for (let i = 0; i < difficulty[0]; i++) {
+        const typed = wordTyped[i];
+        const target = wordArray[i];
+        const box = boxes[i];
+
+        box.textContent = typed;
+
+        if (typed === target) {
+            box.style.backgroundColor = "green";
+        } else if (wordArray.includes(typed)) {
+            box.style.backgroundColor = "yellow"; // 
+        }
+    }
+};
+
 // word display
 const createScreen = () => {
     screen.innerHTML = "";
@@ -144,12 +173,20 @@ const displayLetter = () => {
     boxes.forEach((box, i) => {
         if (wordTyped[i]) {
         box.textContent = wordTyped[i];
-        console.log("Inserted:", wordTyped[i], "in box", i);
+        // console.log( wordTyped[i], i);
         } else {
             box.textContent = "";
         }
     });
 }
+
+// tries display
+const displayTries = () => {
+    const p = document.querySelector("p");
+    p.textContent = "Essais: " + tries;
+}
+
+
 
 // virtual keyboard
 keyboard.addEventListener("click",(event)=>{
@@ -163,14 +200,14 @@ keyboard.addEventListener("click",(event)=>{
         if(event.target.innerText == "DEL" && wordTyped.length > 0){
             wordTyped.pop();
             displayLetter();
-            console.log(wordTyped);
+            // console.log(wordTyped);
             
         return
         }
         if (wordTyped.length < difficulty[0] && event.target.innerText != "ENTER" && event.target.innerText != "DEL") {
             wordTyped.push(letter);
             displayLetter();
-            console.log(wordTyped);
+            // console.log(wordTyped);
         }
     // console.log(event.target.innerText + " key pressed");
     
@@ -178,6 +215,6 @@ keyboard.addEventListener("click",(event)=>{
 })
 
 
-
 startGame();
+displayTries();
 detectKey();
